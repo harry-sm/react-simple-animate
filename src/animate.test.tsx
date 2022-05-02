@@ -2,6 +2,7 @@ import * as React from 'react';
 import * as ReactDOM from 'react-dom';
 import { act } from 'react-dom/test-utils';
 import Animate from '../src/animate';
+import { triggerTransitionEnd } from './utils/testUtils';
 
 jest.useFakeTimers();
 
@@ -57,15 +58,44 @@ describe('Animate', () => {
     const div = container.querySelector('div');
     expect(div.style.opacity).toEqual('0');
 
-    jest.runAllTimers();
+    triggerTransitionEnd(div);
     expect(div.style.background).toEqual('red');
+  });
+
+  it('should finish with complete style using render prop', () => {
+    act(() => {
+      ReactDOM.render(
+        <Animate
+          play
+          end={{ opacity: 0 }}
+          complete={{ background: 'red' }}
+          render={({ style, registerItemRef }) => (
+            <span ref={registerItemRef} style={style}>
+              render props
+            </span>
+          )}
+        >
+          bill
+        </Animate>,
+        container,
+      );
+    });
+
+    const renderPropRoot = container.querySelector('span');
+    expect(renderPropRoot.style.opacity).toEqual('0');
+
+    triggerTransitionEnd(renderPropRoot);
+    expect(renderPropRoot.style.background).toEqual('red');
   });
 
   it('should render correctly with render props', () => {
     act(() => {
       ReactDOM.render(
-        // @ts-ignore
-        <Animate play end={{ opacity: 0 }} render={({ style }) => <span style={style}>render props</span>}>
+        <Animate
+          play
+          end={{ opacity: 0 }}
+          render={({ style }) => <span style={style}>render props</span>}
+        >
           bill
         </Animate>,
         container,
