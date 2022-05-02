@@ -20,7 +20,7 @@ export default function AnimateGroup({
   play,
   sequences = [],
   children,
-}: Props) {
+}: Props): JSX.Element {
   const [animationStates, setAnimationStates] = React.useState({});
   const animationsRef = React.useRef<{
     [key: string]: AnimationProps | AnimateKeyframesProps;
