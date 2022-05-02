@@ -1,7 +1,6 @@
-export interface Style {
-  [key: string]: string | number;
-}
+import * as React from 'react';
 
+export type Style = React.CSSProperties;
 export interface AnimationType {
   play?: boolean;
   overlay?: number;
@@ -10,7 +9,10 @@ export interface AnimationType {
   easeType?: string;
   children?: any;
   register?: (data: any) => void;
-  render?: (data: { style: Style | null }) => any;
+  render?: (data: {
+    style: Style;
+    registerItemRef: (item: any) => void;
+  }) => any;
   sequenceId?: string | number;
   sequenceIndex?: number;
 }
@@ -49,6 +51,8 @@ export interface AnimationProps extends AnimationType {
 
 export interface AnimateKeyframesProps extends AnimationType {
   keyframes: Keyframes;
+  complete?: Style;
+  onComplete?: () => void;
   direction?: 'normal' | 'reverse' | 'alternate' | 'alternate-reverse';
   fillMode?: 'none' | 'forwards' | 'backwards' | 'both';
   iterationCount?: string | number;

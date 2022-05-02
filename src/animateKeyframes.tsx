@@ -13,12 +13,13 @@ import {
 } from './constants';
 import { AnimateKeyframesProps } from './types';
 
-export default function AnimateKeyframes(props: AnimateKeyframesProps) {
+const AnimateKeyframes: React.FC<AnimateKeyframesProps> = (props) => {
   const {
     children,
     play = false,
     pause = false,
     render,
+    onComplete,
     duration = DEFAULT_DURATION,
     delay = 0,
     easeType = DEFAULT_EASE_TYPE,
@@ -43,6 +44,27 @@ export default function AnimateKeyframes(props: AnimateKeyframesProps) {
   const { register, animationStates = {} } = React.useContext(AnimateContext);
   const animateState = animationStates[id] || {};
   const [, forceUpdate] = React.useState(false);
+  const itemRef = React.useRef<null | HTMLElement>(null);
+
+  function registerItemRef(item: any) {
+    itemRef.current = item;
+  }
+
+  function _handleOnComplete() {
+    onComplete && onComplete();
+  }
+
+  React.useEffect(() => {
+    /* Binds animationend event to element which fires onComplete callback */
+    if (itemRef.current) {
+      itemRef.current.addEventListener('animationend', _handleOnComplete);
+    }
+    return () => {
+      itemRef.current &&
+        itemRef.current.removeEventListener('animationend', _handleOnComplete);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   React.useEffect(() => {
     const styleTag = styleTagRef.current;
@@ -93,5 +115,13 @@ export default function AnimateKeyframes(props: AnimateKeyframesProps) {
     }`,
   };
 
-  return render ? render({ style }) : <div style={style || {}}>{children}</div>;
-}
+  return render ? (
+    render({ style, registerItemRef })
+  ) : (
+    <div ref={registerItemRef} style={style || {}}>
+      {children}
+    </div>
+  );
+};
+
+export default AnimateKeyframes;

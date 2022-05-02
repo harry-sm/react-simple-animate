@@ -1,13 +1,13 @@
 import * as React from 'react';
-import secToMs from './utils/secToMs';
-import { AnimationProps, Style } from './types';
+import { AnimationProps } from './types';
 import { ALL, DEFAULT_DURATION, DEFAULT_EASE_TYPE } from './constants';
 
 export default function useAnimate(
   props: AnimationProps,
 ): {
+  registerItemRef: (itemRef: React.RefObject<HTMLElement>) => void;
   isPlaying: boolean;
-  style: Style;
+  style: React.CSSProperties;
   play: (boolean) => void;
 } {
   const {
@@ -25,37 +25,48 @@ export default function useAnimate(
   );
   const [animate, setAnimate] = React.useState<{
     isPlaying: boolean;
-    style: Style;
+    style: React.CSSProperties;
   }>({
     isPlaying: false,
     style: { ...start, transition },
   });
   const { isPlaying, style } = animate;
-  const onCompleteTimeRef = React.useRef<NodeJS.Timeout>();
+  // const onCompleteTimeRef = React.useRef<NodeJS.Timeout>();
+  const itemRef = React.useRef<null | HTMLElement>(null);
 
-  React.useEffect(() => {
-    if ((onCompleteTimeRef.current || complete) && isPlaying) {
-      onCompleteTimeRef.current = setTimeout((): void => {
-        if (onComplete) {
-          onComplete();
-        }
+  function registerItemRef(item: any) {
+    itemRef.current = item;
+  }
 
-        if (complete) {
-          setAnimate({
-            ...animate,
-            style: complete,
-          });
-        }
-      }, secToMs(delay + duration));
+  function _handleOnComplete() {
+    if (onComplete) {
+      onComplete();
     }
 
-    return () =>
-      onCompleteTimeRef.current && clearTimeout(onCompleteTimeRef.current);
-  }, [isPlaying]);
+    if (complete) {
+      setAnimate({
+        ...animate,
+        style: complete,
+      });
+    }
+  }
+
+  React.useEffect(() => {
+    if (itemRef.current) {
+      itemRef.current.addEventListener('transitionend', _handleOnComplete);
+    }
+    return () => {
+      if (itemRef.current) {
+        itemRef.current.removeEventListener('transitionend', _handleOnComplete);
+      }
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   return {
     isPlaying,
     style,
+    registerItemRef,
     play: React.useCallback((isPlaying: boolean) => {
       setAnimate({
         ...animate,
@@ -65,6 +76,7 @@ export default function useAnimate(
         },
         isPlaying,
       });
+      // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []),
   };
 }
