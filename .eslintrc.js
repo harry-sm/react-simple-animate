@@ -22,6 +22,7 @@ module.exports = {
     'react-hooks/exhaustive-deps': 'warn',
     'react/display-name': 'warn',
     'no-console': 'error',
+    'react/prop-types': 0,
   },
   overrides: [
     {
